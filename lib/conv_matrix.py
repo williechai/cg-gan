@@ -1,0 +1,121 @@
+import numpy as np
+
+def conv_as_matrix_2d(in_size, stride, padding, weight):
+    """
+    Transfer a convolution(with a 2d weight, flipping-convolution) operation to a matrix multiplication, satisfying:
+    conv(input_image, weight).flatten equals dot(input_image.flatten, matrix)
+    only works when following condition satisfied:
+    o equals [(i+2p-k)/s] + 1
+    i -- input image size
+    o -- output iamge size
+    k -- kernel size
+    p -- padding
+    s -- stride
+    """
+    weight = np.fliplr(np.flipud(weight))
+    in_size = int(in_size)
+    kernel_size = weight.shape[0]
+    padding = int(padding)
+    stride = int(stride)
+    out_size = (in_size + 2 * padding - kernel_size) / stride + 1
+    mat = np.zeros((in_size*in_size, out_size*out_size))
+    #[item * stride - padding for item in range(0, out_size)] is every (left-top-)conv-point in input
+    for oi, i in enumerate([item * stride - padding for item in range(0, out_size)]):
+        for oj, j in enumerate([item * stride - padding for item in range(0, out_size)]):
+            for r in range(0, kernel_size):
+                for c in range(0, kernel_size):
+                    #print ('in ',i,j,'   ke ',r,c,'  mat ',i+r,j+c)
+                    if (i+r in range(0, in_size)) and (j+c in range(0, in_size)):
+                        #print ('   ', 'in ',i,j,'   ke ',r,c,'  mat ',i+r,j+c)
+                        mat[(i+r)*in_size + j+c, oi*out_size + oj] = weight[r, c]
+    return mat
+
+def conv_as_matrix_4d(in_size, stride, padding, weight):
+    """
+    Transfer a convolution(with a 4d weight(o_channel, i_channel, w, h)) operation to a matrix multiplication.
+    return:
+    [m(1,1) m(1,2) ... m(1,o_channel)
+     m(2,1) m(2,2) ... m(2,o_channel)
+     m(3,1) ...
+     ...
+     m(i_channel,1) m(i_channel,2) ... m(i_channel,o_channel)]
+    Every element is calculated by calling cinv_as_matrix_2d given weight[i,j].
+    """
+    out_channel = weight.shape[0]
+    in_channel = weight.shape[1]
+    return np.hstack([np.vstack([conv_as_matrix_2d(in_size, stride, padding, weight[oc, ic]) for ic in range(0, in_channel)]) for oc in range(0, out_channel)])
+
+def dot_concat_in_matrix(weight, ny):
+    """
+    concat(dot(in, weight),y) equals dot(in, dot_concat_in_matrix(weight,ny)) 
+    weight(2d):
+    [[  0.,  1.,  2.,  3.],
+     [  4.,  5.,  6.,  7.],
+     [  8.,  9., 10., 11.],
+     [ 12., 13., 14., 15.],
+     [ 16., 17., 18., 19.],
+     [ 20., 21., 22., 23.]]
+    ny: 3
+    got:
+    [[  0.   1.   2.   3.   0.   0.   0.]
+     [  4.   5.   6.   7.   0.   0.   0.]
+     [  8.   9.  10.  11.   0.   0.   0.]
+     [ 12.  13.  14.  15.   1.   0.   0.]
+     [ 16.  17.  18.  19.   0.   1.   0.]
+     [ 20.  21.  22.  23.   0.   0.   1.]]
+
+    """
+    return np.hstack([weight, np.vstack([np.zeros((weight.shape[0]-ny, ny)), np.identity(ny)])])
+
+def conv_concat_in_matrix_2d(ny, in_channel, out_channel, weight):
+    """
+    convolutional concat in matrix when given weight is 2d, satisfying:
+    conv_concat(dot(in,weight).reshape_to_4d,yb) equals dot(in, conv_concat_in_matrix_2d(weight)).reshape_to_4d
+    stack a mat at right-bottom of the weight(other places are zeroes):
+    concat mat: 
+    [[1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+     [0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],
+     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1],
+     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
+    it implies that input label information is in shape of (ny=3, in_img_size=2, in_imgsize=2)
+    When input multily the concated weight, output equals input * non-concated-weight then conv_concat as usual, and its concated label information has the shape (ny=3, out_img_size=3, out_img_size=3)
+    """
+    in_img_size_square = weight.shape[0] / in_channel
+    out_img_size_square = weight.shape[1] / out_channel
+    conv_identity = np.zeros((in_img_size_square * ny, out_img_size_square * ny))
+    for i in range(0, ny):
+        for j in range(i * out_img_size_square, (i+1) * out_img_size_square):
+            conv_identity[in_img_size_square * i, j] = 1
+    return np.hstack([weight, np.vstack([np.zeros(((in_channel-ny)*in_img_size_square, ny*out_img_size_square)), conv_identity])])
+
+def conv_concat_in_matrix_4d(ny, in_size, stride, padding, weight):
+    """
+    convolutional concat in matrix when given weight is 4d
+    untested..
+    conv_concat(conv(in,weight),yb) equals dot(in.flatten, conv_concat_in_matrix_4d(weight)).reshape_to_4d
+    """
+    in_channel = weight.shape[1]
+    out_channel = weight.shape[0]
+    return conv_concat_in_matrix_2d(ny, in_channel, out_channel, conv_as_matrix_4d(in_size, stride, padding, weight))
+
+def deconv_concat_in_matrix_4d(ny, in_size, stride, padding, weight):
+    """
+    convolutional concat in matrix when given weight is 4d and op is deconv instead of conv
+    untested..
+    param 'in_size' is the input image side of conv, e.g. the output of deconv
+    conv_concat(conv(in,weight),yb) equals dot(in.flatten, conv_concat_in_matrix_4d(weight)).reshape_to_4d
+    """
+    in_channel = weight.shape[0]
+    out_channel = weight.shape[1]
+    return conv_concat_in_matrix_2d(ny, in_channel, out_channel, conv_as_matrix_4d(in_size, stride, padding, weight).transpose())    
+    
+#print dot_concat(np.arange(24).reshape(4,6), 2)
+#print conv_as_matrix_4d(5,2,1,np.arange(0,128*128*7*7).reshape(128,128,7,7)).shape
