@@ -2,9 +2,9 @@
 
 requirements:
 
-   ##theano
+   ## theano
 
-   ##cudnn
+   ## cudnn
 
 1.download dataset from https://pan.baidu.com/s/1dFhbNsH and unzip it in "cg-gan/"
 
