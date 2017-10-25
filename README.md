@@ -2,9 +2,11 @@
 
 requirements:
 
-   ## theano
-
-   ## cudnn
+    theano with cudnn
+    sklearn
+    numpy
+    tqdm
+    matplotlib
 
 1.download dataset from https://pan.baidu.com/s/1dFhbNsH and unzip it in "cg-gan/"
 
