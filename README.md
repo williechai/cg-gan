@@ -10,10 +10,15 @@ requirements:
     matplotlib
     
 1.add
+
     [global]
+    
     device = cuda
+    
     floatX = float32
+    
     optimizer_including=cudnn
+  
   to your .theanorc file
 
 2.download dataset from https://pan.baidu.com/s/1dFhbNsH and unzip it in "cg-gan/"
