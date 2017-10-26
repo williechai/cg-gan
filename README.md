@@ -1,5 +1,5 @@
 # cg-gan
-The implementation of Cross-generating Generative Adversarial Network (CG-GAN) 
+The implementation of Cross-generating Generative Adversarial Network
 
 requirements:
 
