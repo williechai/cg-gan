@@ -27,4 +27,9 @@ requirements:
 
 4.python cggan_train_test.py
 
-5.test results are generated in "logs/", and synthesized face images can be found in "samples/"  
+5.test results are generated in "logs/", and synthesized face images can be found in "samples/" 
+
+Refrences
+
+A Radford ， L Metz ， S Chintala. 
+Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks. In ICLR, 2016. 
