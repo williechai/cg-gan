@@ -21,7 +21,7 @@ requirements:
   
   to your .theanorc file
 
-2.download dataset from https://pan.baidu.com/s/1dFhbNsH and unzip it in "cg-gan/"
+2.download dataset from http://www.cs.cmu.edu/afs/cs/project/PIE/MultiPie/Multi-Pie/Home.html 
 
 3.cd cg-gan 
 
