@@ -1,9 +1,10 @@
-# cg-gan
-The implementation of Cross-generating Generative Adversarial Network
+## INTRODUCTION
+The implementation of paper
+2018 13th IEEE International Conference on Automatic Face & Gesture Recognition (FG 2018)
+Cross-Generating GAN for Facial Identity Preserving
+https://www.computer.org/csdl/proceedings-article/fg/2018/233501a130/12OmNxuXcBU
 
-[https://www.computer.org/csdl/proceedings-article/fg/2018/233501a130/12OmNxuXcBU]
-
-requirements:
+## REQUIREMENTS
 
     theano with cudnn
     sklearn
@@ -11,6 +12,8 @@ requirements:
     tqdm
     matplotlib
     
+## STEPS
+
 1.add
 
     [global]
