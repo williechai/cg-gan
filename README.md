@@ -1,6 +1,8 @@
 # cg-gan
 The implementation of Cross-generating Generative Adversarial Network
 
+[https://www.computer.org/csdl/proceedings-article/fg/2018/233501a130/12OmNxuXcBU]
+
 requirements:
 
     theano with cudnn
